@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:rojashop/components/async_skeleton_image.dart';
 import '../../../models/product.dart';
+import '../../providers/product_provider.dart';
+import 'package:rojashop/components/details_modal.dart';
+import 'package:rojashop/components/success_dialog.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ProductDetailScreen extends StatelessWidget {
   final Product product;
@@ -18,12 +24,19 @@ class ProductDetailScreen extends StatelessWidget {
                   padding: const EdgeInsets.only(left: 16, right: 16, top: 16),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(24),
-                    child: Image.asset(
-                      product.image,
-                      height: 300,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                    ),
+                    child: product.image.startsWith('http')
+                        ? AsyncSkeletonImage(
+                            url: product.image,
+                            height: 300,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          )
+                        : Image.asset(
+                            product.image,
+                            height: 300,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          ),
                   ),
                 ),
                 const SizedBox(height: 18),
@@ -50,6 +63,20 @@ class ProductDetailScreen extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
+                      const SizedBox(height: 12),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            '\$${product.price.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              color: Color(0xFF2EC4F1),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 22,
+                            ),
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: 16),
                       Row(
                         children: [
@@ -59,12 +86,16 @@ class ProductDetailScreen extends StatelessWidget {
                               vertical: 6,
                             ),
                             decoration: BoxDecoration(
-                              color: Color(0xFF22C55E),
+                              color: product.inventory > 0
+                                  ? Color(0xFF22C55E)
+                                  : Color(0xFFE94B4B),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: const Text(
-                              'Available in stock',
-                              style: TextStyle(
+                            child: Text(
+                              product.inventory > 0
+                                  ? 'in stock'.tr()
+                                  : 'out of stock'.tr(),
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -139,7 +170,35 @@ class ProductDetailScreen extends StatelessWidget {
                             Icons.chevron_right,
                             color: Colors.white,
                           ),
-                          onTap: () {},
+                          onTap: () {
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (context) => DraggableScrollableSheet(
+                                initialChildSize: 0.7,
+                                minChildSize: 0.5,
+                                maxChildSize: 0.95,
+                                expand: false,
+                                builder: (context, scrollController) => DetailsModal(
+                                  story: product.description ?? '',
+                                  details: const [
+                                    'Materials: 100% cotton, and lining Structured',
+                                    'Adjustable cotton strap closure',
+                                    'High-quality embroidery stitching',
+                                    'Head circumference: 21” - 24” / 54-62 cm',
+                                    'Embroidery stitching',
+                                    'One size fits most',
+                                  ],
+                                  styleNotes: const {
+                                    'Style': 'Summer Hat',
+                                    'Design': 'Plain',
+                                    'Fabric': 'Jersey',
+                                  },
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ),
                       const SizedBox(height: 90),
@@ -191,60 +250,48 @@ class ProductDetailScreen extends StatelessWidget {
               bottom: 0,
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 14,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF6C63FF),
+                child: SizedBox(
+                  height: 56,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF6C63FF),
+                      shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '\$${product.price.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                            ),
-                          ),
-                          const Text(
-                            'Unit price',
-                            style: TextStyle(color: Colors.white, fontSize: 13),
-                          ),
-                        ],
+                      padding: EdgeInsets.zero,
+                    ),
+                    onPressed: product.inventory > 0
+                        ? () async {
+                            final provider = Provider.of<ProductProvider>(
+                              context,
+                              listen: false,
+                            );
+                            final count = await provider.sellProduct(
+                              product.id,
+                            );
+                            if (context.mounted) {
+                              showDialog(
+                                context: context,
+                                barrierDismissible: true,
+                                barrierColor: Colors.black.withAlpha(
+                                  (0.5 * 255).toInt(),
+                                ),
+                                builder: (context) => SuccessDialog(
+                                  text: "${'sold count'.tr()}: $count",
+                                ),
+                              );
+                            }
+                          }
+                        : null,
+                    child: Text(
+                      'sell'.tr(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: SizedBox(
-                        height: 56,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF6C63FF),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            padding: EdgeInsets.zero,
-                          ),
-                          onPressed: () {},
-                          child: const Text(
-                            'Buy Now',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
