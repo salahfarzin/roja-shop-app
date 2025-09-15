@@ -5,7 +5,7 @@ import '../../../models/product.dart';
 import '../../providers/product_provider.dart';
 import 'package:rojashop/components/details_modal.dart';
 import 'package:rojashop/components/success_dialog.dart';
-import 'package:easy_localization/easy_localization.dart';
+import 'package:easy_localization/easy_localization.dart' as trans;
 
 class ProductDetailScreen extends StatelessWidget {
   final Product product;
@@ -13,15 +13,25 @@ class ProductDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.white;
+    final secondaryTextColor =
+        theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7) ??
+        const Color(0xFFB0B0B0);
+    final cardColor = theme.cardColor;
+    final iconColor = theme.iconTheme.color ?? Colors.white;
+    final accentColor = theme.colorScheme.secondary;
+    final borderColor = theme.dividerColor;
+
     return SafeArea(
       child: Scaffold(
-        backgroundColor: const Color(0xFF181922),
+        backgroundColor: theme.scaffoldBackgroundColor,
         body: Stack(
           children: [
             Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(left: 16, right: 16, top: 16),
+                  padding: const EdgeInsets.only(left: 16, right: 16, top: 60),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(24),
                     child: product.image.startsWith('http')
@@ -48,34 +58,38 @@ class ProductDetailScreen extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         product.brand,
-                        style: const TextStyle(
-                          color: Color(0xFFB0B0B0),
+                        style: TextStyle(
+                          color: secondaryTextColor,
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        product.name,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        product.title,
+                        style: TextStyle(
+                          color: textColor,
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       const SizedBox(height: 12),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            '\$${product.price.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              color: Color(0xFF2EC4F1),
-                              fontWeight: FontWeight.bold,
-                              fontSize: 22,
+                      Directionality(
+                        textDirection: TextDirection.ltr,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              '\$${product.price.toStringAsFixed(0)}',
+                              style: TextStyle(
+                                fontFamily: 'RobotoMono',
+                                color: accentColor,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 22,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 16),
                       Row(
@@ -87,89 +101,78 @@ class ProductDetailScreen extends StatelessWidget {
                             ),
                             decoration: BoxDecoration(
                               color: product.inventory > 0
-                                  ? Color(0xFF22C55E)
-                                  : Color(0xFFE94B4B),
+                                  ? const Color(0xFF22C55E)
+                                  : const Color(0xFFE94B4B),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
                               product.inventory > 0
                                   ? 'in stock'.tr()
                                   : 'out of stock'.tr(),
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: TextStyle(
+                                color: theme.colorScheme.onPrimary,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
                           const SizedBox(width: 18),
-                          const Icon(
-                            Icons.star,
-                            color: Color(0xFFFFC107),
-                            size: 22,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '4.4',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          const Text(
-                            '(126 Reviews)',
-                            style: TextStyle(
-                              color: Color(0xFFB0B0B0),
-                              fontSize: 14,
-                            ),
-                          ),
+                          // Icon(Icons.star, color: Colors.amber, size: 22),
+                          // const SizedBox(width: 4),
+                          // Text(
+                          //   '4.4',
+                          //   style: TextStyle(
+                          //     color: textColor,
+                          //     fontWeight: FontWeight.bold,
+                          //     fontSize: 16,
+                          //   ),
+                          // ),
+                          // const SizedBox(width: 4),
+                          // Text(
+                          //   '(126 Reviews)',
+                          //   style: TextStyle(
+                          //     color: secondaryTextColor,
+                          //     fontSize: 14,
+                          //   ),
+                          // ),
                         ],
                       ),
                       const SizedBox(height: 22),
-                      const Text(
-                        'Product info',
+                      Text(
+                        'info'.tr(),
                         style: TextStyle(
-                          color: Colors.white,
+                          color: textColor,
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        product.description ??
-                            "A cool gray cap in soft corduroy. Watch me. By buying cotton products from Lindex, you’re supporting more responsibly...",
-                        style: const TextStyle(
-                          color: Color(0xFFB0B0B0),
+                        product.description ?? "",
+                        style: TextStyle(
+                          color: secondaryTextColor,
                           fontSize: 15,
                         ),
                       ),
                       const SizedBox(height: 22),
                       Container(
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           border: Border(
-                            top: BorderSide(color: Color(0xFF23232B), width: 1),
+                            top: BorderSide(color: borderColor, width: 1),
                           ),
                         ),
                         child: ListTile(
                           contentPadding: EdgeInsets.zero,
-                          leading: const Icon(
-                            Icons.info_outline,
-                            color: Colors.white,
-                          ),
-                          title: const Text(
-                            'Product Details',
+                          leading: Icon(Icons.info_outline, color: iconColor),
+                          title: Text(
+                            'details'.tr(),
                             style: TextStyle(
-                              color: Colors.white,
+                              color: textColor,
                               fontWeight: FontWeight.w600,
                               fontSize: 16,
                             ),
                           ),
-                          trailing: const Icon(
-                            Icons.chevron_right,
-                            color: Colors.white,
-                          ),
+                          trailing: Icon(Icons.chevron_right, color: iconColor),
                           onTap: () {
                             showModalBottomSheet(
                               context: context,
@@ -180,22 +183,12 @@ class ProductDetailScreen extends StatelessWidget {
                                 minChildSize: 0.5,
                                 maxChildSize: 0.95,
                                 expand: false,
-                                builder: (context, scrollController) => DetailsModal(
-                                  story: product.description ?? '',
-                                  details: const [
-                                    'Materials: 100% cotton, and lining Structured',
-                                    'Adjustable cotton strap closure',
-                                    'High-quality embroidery stitching',
-                                    'Head circumference: 21” - 24” / 54-62 cm',
-                                    'Embroidery stitching',
-                                    'One size fits most',
-                                  ],
-                                  styleNotes: const {
-                                    'Style': 'Summer Hat',
-                                    'Design': 'Plain',
-                                    'Fabric': 'Jersey',
-                                  },
-                                ),
+                                builder: (context, scrollController) =>
+                                    DetailsModal(
+                                      story: product.description ?? '',
+                                      details: product.details,
+                                      styleNotes: product.styleNotes,
+                                    ),
                               ),
                             );
                           },
@@ -218,22 +211,18 @@ class ProductDetailScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
-                      icon: const Icon(
-                        Icons.arrow_back,
-                        color: Colors.white,
-                        size: 28,
-                      ),
+                      icon: Icon(Icons.arrow_back, color: iconColor, size: 28),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.18),
+                        color: cardColor.withOpacity(0.18),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: IconButton(
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.bookmark_border,
-                          color: Colors.white,
+                          color: iconColor,
                           size: 24,
                         ),
                         onPressed: () {},
@@ -254,7 +243,7 @@ class ProductDetailScreen extends StatelessWidget {
                   height: 56,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6C63FF),
+                      backgroundColor: accentColor,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
@@ -285,8 +274,8 @@ class ProductDetailScreen extends StatelessWidget {
                         : null,
                     child: Text(
                       'sell'.tr(),
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: theme.colorScheme.onSecondary,
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
                       ),

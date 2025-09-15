@@ -43,6 +43,13 @@ class _ProductListScreenState extends State<ProductListScreen> {
           ),
           actions: [
             IconButton(
+              icon: const Icon(Icons.add, size: 28),
+              tooltip: 'Add Product',
+              onPressed: () {
+                Navigator.of(context).pushNamed('/add-product');
+              },
+            ),
+            IconButton(
               icon: const Icon(Icons.search, size: 28),
               onPressed: () {},
             ),
@@ -71,7 +78,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                           Center(
                             child: ElevatedButton.icon(
                               icon: const Icon(Icons.refresh),
-                              label: Text('try_again'.tr()),
+                              label: Text('try again'.tr()),
                               style: ElevatedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 24,
@@ -109,15 +116,37 @@ class _ProductListScreenState extends State<ProductListScreen> {
                       return ListView(
                         physics: const BouncingScrollPhysics(),
                         children: [
-                          const SizedBox(height: 300),
-                          Center(child: Text('no_products'.tr())),
+                          const SizedBox(height: 200),
+                          Center(child: Text('no products'.tr())),
+                          const SizedBox(height: 24),
+                          Center(
+                            child: ElevatedButton.icon(
+                              icon: const Icon(Icons.refresh),
+                              label: Text('try again'.tr()),
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(24),
+                                ),
+                              ),
+                              onPressed: () {
+                                Provider.of<ProductProvider>(
+                                  context,
+                                  listen: false,
+                                ).fetchProducts();
+                              },
+                            ),
+                          ),
                         ],
                       );
                     }
                     return Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 12.0),
                       child: GridView.builder(
-                        physics: const BouncingScrollPhysics(),
+                        physics: const AlwaysScrollableScrollPhysics(),
                         itemCount: products.length,
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(

@@ -1,8 +1,9 @@
-import 'package:easy_localization/easy_localization.dart';
+import 'package:easy_localization/easy_localization.dart' as trans;
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/locale_provider.dart';
 import '../models/product.dart';
 import '../screens/products/details.dart';
-
 import 'package:rojashop/components/async_skeleton_image.dart';
 
 class ProductCard extends StatelessWidget {
@@ -11,6 +12,10 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final isRtl = Provider.of<LocaleProvider>(context).isRtl;
+
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -21,8 +26,7 @@ class ProductCard extends StatelessWidget {
         );
       },
       child: Card(
-        color: Theme.of(context).cardColor,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        color: theme.cardColor,
         child: Container(
           constraints: const BoxConstraints(minHeight: 260),
           child: Padding(
@@ -39,7 +43,8 @@ class ProductCard extends StatelessWidget {
                     if (product.discount != null)
                       Positioned(
                         top: 8,
-                        right: 8,
+                        left: isRtl ? 8 : null,
+                        right: isRtl ? null : 8,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 10,
@@ -50,8 +55,9 @@ class ProductCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Text(
-                            '${product.discount}% off',
+                            '${product.discount?.round()}%',
                             style: const TextStyle(
+                              fontFamily: 'RobotoMono',
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
                               fontSize: 13,
@@ -74,11 +80,11 @@ class ProductCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  product.name,
+                  product.title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black,
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                   ),
@@ -97,8 +103,8 @@ class ProductCard extends StatelessWidget {
                   ),
                   child: Text(
                     product.inventory > 0
-                        ? 'in stock'.tr()
-                        : 'out of stock'.tr(),
+                        ? trans.tr('in stock')
+                        : trans.tr('out of stock'),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 12,
@@ -107,28 +113,33 @@ class ProductCard extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                Row(
-                  children: [
-                    Text(
-                      '\$${product.price}',
-                      style: const TextStyle(
-                        color: Color(0xFF2EC4F1),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    if (product.oldPrice != null) ...[
-                      const SizedBox(width: 8),
+                Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: Row(
+                    children: [
                       Text(
-                        '\$${product.oldPrice}',
+                        '\$${product.price.toStringAsFixed(0)}',
                         style: const TextStyle(
-                          color: Color(0xFFB0B0B0),
-                          fontSize: 13,
-                          decoration: TextDecoration.lineThrough,
+                          fontFamily: 'RobotoMono',
+                          color: Color(0xFF2EC4F1),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
                         ),
                       ),
+                      if (product.oldPrice != null) ...[
+                        const SizedBox(width: 8),
+                        Text(
+                          '\$${product.oldPrice!.toStringAsFixed(0)}',
+                          style: const TextStyle(
+                            fontFamily: 'RobotoMono',
+                            color: Color(0xFFB0B0B0),
+                            fontSize: 13,
+                            decoration: TextDecoration.lineThrough,
+                          ),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ],
             ),
