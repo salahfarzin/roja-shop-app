@@ -7,6 +7,19 @@ import '../utils/http_error.dart';
 enum ProductStatus { initial, loading, loaded, error }
 
 class ProductProvider with ChangeNotifier {
+  Future<Product?> addProduct(Map<String, dynamic> data) async {
+    try {
+      final product = await _service.createProduct(data);
+      _products = [..._products, product];
+      notifyListeners();
+      return product;
+    } catch (e) {
+      _errorMessage = 'Failed to add product: $e';
+      notifyListeners();
+      return null;
+    }
+  }
+
   final ProductService _service = ProductService();
 
   List<Product> _products = const [];

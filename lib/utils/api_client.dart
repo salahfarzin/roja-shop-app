@@ -20,7 +20,6 @@ class ApiClient {
     Map<String, String>? headers,
   }) async {
     final uri = Uri.parse('$baseUrl$path');
-
     final mergedHeaders = {...defaultHeaders, ...?headers};
 
     try {
@@ -60,7 +59,49 @@ class ApiClient {
         );
       }
     } catch (e) {
-      // Prefer e.message if available, else fallback to e.toString()
+      final message = (e is HttpError)
+          ? e.message
+          : (e is Exception && e.toString().isNotEmpty
+                ? e.toString()
+                : 'Unknown error');
+      throw HttpError(message, 500);
+    }
+  }
+
+  /// Sends a multipart/form-data POST request with fields and a file.
+  Future<dynamic> multipartRequest(
+    String path, {
+    required Map<String, String> fields,
+    String? fileField,
+    String? filePath,
+    Map<String, String>? headers,
+  }) async {
+    final uri = Uri.parse('$baseUrl$path');
+    final request = http.MultipartRequest('POST', uri);
+    request.fields.addAll(fields);
+    if (fileField != null && filePath != null && filePath.isNotEmpty) {
+      request.files.add(await http.MultipartFile.fromPath(fileField, filePath));
+    }
+    if (headers != null) {
+      request.headers.addAll(headers);
+    }
+    // Remove content-type header for multipart
+    request.headers.removeWhere((k, v) => k.toLowerCase() == 'content-type');
+    try {
+      final streamed = await request.send();
+      final response = await http.Response.fromStream(streamed);
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        if (response.body.isNotEmpty) {
+          return jsonDecode(response.body);
+        }
+        return null;
+      } else {
+        throw HttpError(
+          'HTTP ${response.statusCode}: ${response.body}',
+          response.statusCode,
+        );
+      }
+    } catch (e) {
       final message = (e is HttpError)
           ? e.message
           : (e is Exception && e.toString().isNotEmpty
