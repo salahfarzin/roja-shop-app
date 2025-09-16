@@ -17,11 +17,14 @@
   "success": "موفق",
   "manage products": "مدیریت محصولات",
   "add product": "اضافه کردن محصول",
+  "edit product": "ویرایش محصول",
   "product name": "نام محصول",
   "brand": "برند",
   "price": "قیمت",
   "inventory": "موجودی",
   "save": "ذخیره",
+  "saving...": "در حال ذخیره...",
+  "add image": "اضافه کردن تصویر",
   "required": "الزامی",
   "settings": "تنظیمات",
   "language": "زبان",
@@ -29,5 +32,10 @@
   "value": "مقدار",
   "remove": "حذف",
   "info": "اطلاعات",
-  "toggle theme": "تغییر تم"
+  "toggle theme": "تغییر تم",
+  "image is required": "تصویر الزامی است",
+  "invalid number": "عدد نامعتبر",
+  "product created": "محصول ایجاد شد",
+  "must be a number": "باید یک عدد باشد",
+  "must be positive": "باید مثبت باشد"
 }

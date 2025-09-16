@@ -6,7 +6,10 @@ class ProductService {
   final ApiClient _client = ApiClient();
 
   /// Creates a product, uploading image if local file, and only including non-empty fields.
-  Future<Product> createProduct(Map<String, dynamic> data) async {
+  Future<Product> createProduct(
+    Map<String, dynamic> data, {
+    void Function(double progress)? onProgress,
+  }) async {
     // Remove null or empty fields
     final filtered = <String, String>{};
     data.forEach((key, value) {
@@ -36,8 +39,61 @@ class ProductService {
       fields: filtered,
       fileField: isLocalImage ? 'image' : null,
       filePath: isLocalImage ? imagePath : null,
+      onProgress: onProgress,
     );
-    return Product.fromJson(response as Map<String, dynamic>);
+
+    return Product.fromJson(response['product'] as Map<String, dynamic>);
+  }
+
+  /// Updates a product, uploading image if local file, and only including non-empty fields.
+  Future<Product> updateProduct(
+    String id,
+    Map<String, dynamic> data, {
+    void Function(double progress)? onProgress,
+  }) async {
+    // Remove null or empty fields
+    final filtered = <String, String>{};
+    data.forEach((key, value) {
+      if (value == null) return;
+      if (value is String && value.trim().isEmpty) return;
+      if (key == 'details' || key == 'style_notes') {
+        if (value is Map && value.isNotEmpty) {
+          filtered[key] = jsonEncode(value);
+        }
+        return;
+      }
+      if (value is num || value is int || value is double) {
+        filtered[key] = value.toString();
+        return;
+      }
+      filtered[key] = value.toString();
+    });
+
+    String? imagePath = data['image'];
+    bool isLocalImage =
+        imagePath != null &&
+        imagePath.isNotEmpty &&
+        !imagePath.startsWith('http');
+
+    if (isLocalImage) {
+      // Use multipart for image upload
+      final response = await _client.multipartRequest(
+        '/products/$id',
+        fields: filtered,
+        fileField: 'image',
+        filePath: imagePath,
+        onProgress: onProgress,
+      );
+      return Product.fromJson(response['product'] as Map<String, dynamic>);
+    } else {
+      // Use regular PUT for non-image update
+      final response = await _client.request(
+        '/products/$id',
+        method: 'PUT',
+        body: filtered,
+      );
+      return Product.fromJson(response['product'] as Map<String, dynamic>);
+    }
   }
 
   Future<dynamic> sellProduct(String uuid) async {

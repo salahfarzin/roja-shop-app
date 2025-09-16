@@ -3,6 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/theme_provider.dart';
+import 'package:android_intent_plus/android_intent.dart';
 
 class SettingsScreen extends StatefulWidget {
   final VoidCallback? onThemeToggle;
@@ -109,7 +110,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               trailing: Switch(
                 value: isDark!,
-                activeColor: theme.colorScheme.secondary,
+                activeThumbColor: theme.colorScheme.secondary,
                 activeThumbImage: null,
                 onChanged: (val) async {
                   setState(() {
@@ -120,9 +121,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               onTap: null,
             ),
+            ListTile(
+              title: const Text('Notification Access Settings'),
+              trailing: ElevatedButton.icon(
+                icon: const Icon(Icons.settings),
+                label: const Text('Open'),
+                onPressed: _openNotificationAccessSettings,
+              ),
+            ),
           ],
         ),
       ),
     );
+  }
+
+  void _openNotificationAccessSettings() {
+    // Android only
+    // Requires android_intent_plus in pubspec.yaml
+    // You may want to check Platform.isAndroid before calling
+    // import 'package:android_intent_plus/android_intent.dart';
+    final intent = AndroidIntent(
+      action: 'android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS',
+    );
+    intent.launch();
   }
 }

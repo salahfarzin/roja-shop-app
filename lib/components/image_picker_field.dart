@@ -44,7 +44,9 @@ class _ImagePickerFieldState extends State<ImagePickerField> {
         color: Colors.grey[200],
         child: _imagePath == null
             ? const Icon(Icons.add_a_photo, size: 48)
-            : Image.file(File(_imagePath!), fit: BoxFit.cover),
+            : (_imagePath!.startsWith('http')
+                  ? Image.network(_imagePath!, fit: BoxFit.cover)
+                  : Image.file(File(_imagePath!), fit: BoxFit.cover)),
       ),
     );
   }

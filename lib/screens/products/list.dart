@@ -158,6 +158,8 @@ class _ProductListScreenState extends State<ProductListScreen> {
                         itemBuilder: (context, index) {
                           return ProductCard(product: products[index]);
                         },
+                        cacheExtent:
+                            500, // Only keep 500 pixels worth of widgets in memory
                       ),
                     );
                   },

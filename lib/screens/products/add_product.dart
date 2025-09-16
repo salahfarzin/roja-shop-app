@@ -1,19 +1,27 @@
-import 'package:easy_localization/easy_localization.dart';
+import 'package:easy_localization/easy_localization.dart' as trans;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:rojashop/components/image_picker_field.dart';
+import 'package:rojashop/components/product_form_fields.dart';
+import 'package:rojashop/components/product_form_actions.dart';
 import 'package:provider/provider.dart';
+import 'package:rojashop/components/success_dialog.dart';
+import 'package:rojashop/models/product.dart';
 import 'package:rojashop/providers/product_provider.dart';
 import 'package:rojashop/components/key_value_list_field.dart';
+// Removed stray function declaration
 
 class AddProductScreen extends StatefulWidget {
-  const AddProductScreen({super.key});
+  final Product? product;
+  const AddProductScreen({super.key, this.product});
 
   @override
   State<AddProductScreen> createState() => _AddProductScreenState();
 }
 
 class _AddProductScreenState extends State<AddProductScreen> {
+  bool _isLoading = false;
+  double _uploadProgress = 0.0;
+
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _brandController = TextEditingController();
@@ -25,6 +33,28 @@ class _AddProductScreenState extends State<AddProductScreen> {
   String? _imagePath;
   Map<String, String> _details = {};
   Map<String, String> _styleNotes = {};
+
+  @override
+  void initState() {
+    super.initState();
+    final product = widget.product;
+    if (product != null) {
+      _titleController.text = product.title;
+      _brandController.text = product.brand;
+      _descriptionController.text = product.description ?? '';
+      _priceController.text = product.price.toString();
+      _oldPriceController.text = product.oldPrice?.toString() ?? '';
+      _discountController.text = product.discount?.toString() ?? '';
+      _inventoryController.text = product.inventory.toString();
+      _imagePath = product.image;
+      _details = Map<String, String>.from(
+        product.details?.map((k, v) => MapEntry(k, v.toString())) ?? {},
+      );
+      _styleNotes = Map<String, String>.from(
+        product.styleNotes?.map((k, v) => MapEntry(k, v.toString())) ?? {},
+      );
+    }
+  }
 
   @override
   void dispose() {
@@ -46,10 +76,16 @@ class _AddProductScreenState extends State<AddProductScreen> {
         theme.textTheme.bodyLarge?.color ??
         Colors.black;
     final textColor = theme.textTheme.bodyLarge?.color ?? Colors.black;
+    final String requiredError = 'required'.tr();
+
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-        appBar: AppBar(title: Text('add product'.tr())),
+        appBar: AppBar(
+          title: Text(
+            widget.product == null ? 'add product'.tr() : 'edit product'.tr(),
+          ),
+        ),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Form(
@@ -65,34 +101,19 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
-                  controller: _titleController,
-                  decoration: InputDecoration(
-                    labelText: 'product name'.tr(),
-                    labelStyle: TextStyle(color: labelColor),
-                  ),
-                  style: TextStyle(color: textColor),
-                  validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                ProductFormFields(
+                  titleController: _titleController,
+                  brandController: _brandController,
+                  descriptionController: _descriptionController,
+                  priceController: _priceController,
+                  oldPriceController: _oldPriceController,
+                  discountController: _discountController,
+                  inventoryController: _inventoryController,
+                  labelColor: labelColor,
+                  textColor: textColor,
+                  requiredError: requiredError,
                 ),
-                TextFormField(
-                  controller: _brandController,
-                  decoration: InputDecoration(
-                    labelText: 'brand'.tr(),
-                    labelStyle: TextStyle(color: labelColor),
-                  ),
-                  style: TextStyle(color: textColor),
-                  validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-                ),
-                TextFormField(
-                  controller: _descriptionController,
-                  decoration: InputDecoration(
-                    labelText: 'description'.tr(),
-                    labelStyle: TextStyle(color: labelColor),
-                  ),
-                  style: TextStyle(color: textColor),
-                  maxLines: 3,
-                  validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-                ),
+                const SizedBox(height: 12),
                 KeyValueListField(
                   title: 'details'.tr(),
                   initialValues: _details,
@@ -104,56 +125,28 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   initialValues: _styleNotes,
                   onChanged: (map) => setState(() => _styleNotes = map),
                 ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _oldPriceController,
-                  decoration: InputDecoration(
-                    labelText: 'old price'.tr(),
-                    labelStyle: TextStyle(color: labelColor),
-                  ),
-                  style: TextStyle(color: textColor),
-                  keyboardType: TextInputType.number,
-                ),
-                TextFormField(
-                  controller: _discountController,
-                  decoration: InputDecoration(
-                    labelText: 'discount (%)'.tr(),
-                    labelStyle: TextStyle(color: labelColor),
-                  ),
-                  style: TextStyle(color: textColor),
-                  keyboardType: TextInputType.number,
-                ),
-                TextFormField(
-                  controller: _priceController,
-                  decoration: InputDecoration(
-                    labelText: 'price'.tr(),
-                    labelStyle: TextStyle(color: labelColor),
-                  ),
-                  style: TextStyle(color: textColor),
-                  keyboardType: TextInputType.number,
-                  validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-                ),
-                TextFormField(
-                  controller: _inventoryController,
-                  decoration: InputDecoration(
-                    labelText: 'inventory'.tr(),
-                    labelStyle: TextStyle(color: labelColor),
-                  ),
-                  style: TextStyle(color: textColor),
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return 'Required';
-                    final n = int.tryParse(v);
-                    if (n == null) return 'Must be an integer';
-                    if (n < 0) return 'Must be positive';
-                    return null;
-                  },
-                ),
                 const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: () async {
+                ProductFormActions(
+                  onSave: () async {
                     if (_formKey.currentState!.validate()) {
+                      if (_imagePath == null || _imagePath!.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'image is required'.tr(),
+                              textDirection: TextDirection.rtl,
+                            ),
+                            backgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.error,
+                          ),
+                        );
+                        return;
+                      }
+                      setState(() {
+                        _isLoading = true;
+                        _uploadProgress = 0.0;
+                      });
                       final productData = {
                         'title': _titleController.text,
                         'brand': _brandController.text,
@@ -170,35 +163,85 @@ class _AddProductScreenState extends State<AddProductScreen> {
                         context,
                         listen: false,
                       );
-                      final result = await provider.addProduct(productData);
-                      if (result != null) {
-                        if (context.mounted) Navigator.pop(context);
-                        // Only clear the form after successful add and after navigation
-                        _titleController.clear();
-                        _brandController.clear();
-                        _descriptionController.clear();
-                        _priceController.clear();
-                        _oldPriceController.clear();
-                        _discountController.clear();
-                        _inventoryController.clear();
-                        setState(() {
-                          _details = {};
-                          _styleNotes = {};
-                          _imagePath = null;
-                        });
+                      dynamic result;
+                      if (widget.product != null) {
+                        // Update product logic
+                        result = await provider.updateProduct(
+                          widget.product!.id,
+                          productData,
+                          onProgress: (progress) {
+                            setState(() {
+                              _uploadProgress = progress;
+                            });
+                          },
+                        );
+                      } else {
+                        // Add product logic
+                        result = await provider.addProduct(
+                          productData,
+                          onProgress: (progress) {
+                            setState(() {
+                              _uploadProgress = progress;
+                            });
+                          },
+                        );
+                      }
+                      setState(() {
+                        _isLoading = false;
+                        _uploadProgress = 0.0;
+                      });
+                      if (result is Product) {
+                        if (context.mounted) {
+                          showDialog(
+                            context: context,
+                            builder: (ctx) =>
+                                SuccessDialog(text: 'success'.tr()),
+                          );
+                          if (widget.product == null) {
+                            // Clear the form for next entry only if adding
+                            _titleController.clear();
+                            _brandController.clear();
+                            _descriptionController.clear();
+                            _priceController.clear();
+                            _oldPriceController.clear();
+                            _discountController.clear();
+                            _inventoryController.clear();
+                            setState(() {
+                              _details = {};
+                              _styleNotes = {};
+                              _imagePath = null;
+                            });
+                          }
+                        }
                       } else {
                         if (context.mounted) {
                           final error =
-                              provider.errorMessage ?? 'Failed to add product.';
-                          ScaffoldMessenger.of(
-                            context,
-                          ).showSnackBar(SnackBar(content: Text(error)));
+                              provider.errorMessage ??
+                              'Failed to save product.';
+                          // Removed duplicate trailing widget tree and class definition
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                error,
+                                textDirection: TextDirection.ltr,
+                              ),
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.error,
+                            ),
+                          );
                         }
                       }
                     }
                   },
-                  child: Text('save'.tr()),
+                  isSaving: _isLoading,
+                  isEditMode: widget.product != null,
                 ),
+                if (_isLoading)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: LinearProgressIndicator(value: _uploadProgress),
+                  ),
               ],
             ),
           ),

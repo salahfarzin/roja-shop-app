@@ -1,6 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart' as trans;
+import 'package:flutter/services.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import 'package:rojashop/models/product.dart';
 import 'package:rojashop/screens/products/add_product.dart';
 import 'package:rojashop/screens/products/management.dart';
 import 'providers/product_provider.dart';
@@ -10,6 +17,19 @@ import 'providers/locale_provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/settings_screen.dart';
+
+void _onReceiveTaskData(Object data) {
+  if (data is Map<String, dynamic>) {
+    final dynamic timestampMillis = data["timestampMillis"];
+    if (timestampMillis != null) {
+      final DateTime timestamp = DateTime.fromMillisecondsSinceEpoch(
+        timestampMillis,
+        isUtc: true,
+      );
+      print('timestamp: ${timestamp.toString()}');
+    }
+  }
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -54,8 +74,27 @@ void main() async {
   );
 }
 
-class RojaShopApp extends StatelessWidget {
+class RojaShopApp extends StatefulWidget {
   const RojaShopApp({super.key});
+
+  @override
+  State<RojaShopApp> createState() => _RojaShopAppState();
+}
+
+class _RojaShopAppState extends State<RojaShopApp> {
+  @override
+  void initState() {
+    super.initState();
+
+    FlutterForegroundTask.addTaskDataCallback(_onReceiveTaskData);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _requestNotificationPermissions(context);
+      _requestForgroundPermissions(context);
+      _initForegroundService();
+      _startForgroundService();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -96,6 +135,28 @@ class RojaShopApp extends StatelessWidget {
         '/': (context) => const ProductListScreen(),
         '/manage-products': (context) => const ProductManagementScreen(),
         '/add-product': (context) => const AddProductScreen(),
+        '/edit-product': (context) {
+          final args = ModalRoute.of(context)?.settings.arguments;
+          // args can be product or product id, adapt as needed
+          if (args is Product) {
+            return AddProductScreen(product: args);
+          }
+          // If only id is passed, you may need to fetch product from provider
+          if (args is String) {
+            final provider = Provider.of<ProductProvider>(
+              context,
+              listen: false,
+            );
+            final product = provider.products
+                .where((p) => p.id == args)
+                .toList();
+            if (product.isNotEmpty) {
+              return AddProductScreen(product: product.first);
+            }
+          }
+          // fallback: show empty add screen
+          return const AddProductScreen();
+        },
         '/settings': (context) => SettingsScreen(),
       },
       debugShowCheckedModeBanner: false,
@@ -103,5 +164,101 @@ class RojaShopApp extends StatelessWidget {
     return isRtl
         ? Directionality(textDirection: TextDirection.rtl, child: app)
         : app;
+  }
+
+  Future<void> _requestNotificationPermissions(BuildContext context) async {
+    final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+    final result = await flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >()
+        ?.requestPermissions(alert: true, badge: true, sound: true);
+
+    try {
+      final status = await Permission.notification.request();
+      if (!status.isGranted) {
+        // Show message or guide user to settings
+      }
+    } catch (e) {
+      if (e is PlatformException &&
+          e.code == 'PermissionRequestCancelledException') {
+        // Show a friendly message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Permission request was cancelled.')),
+        );
+      }
+    }
+  }
+
+  Future<void> _requestForgroundPermissions(BuildContext context) async {
+    final NotificationPermission notificationPermission =
+        await FlutterForegroundTask.checkNotificationPermission();
+    if (notificationPermission != NotificationPermission.granted) {
+      try {
+        await FlutterForegroundTask.requestNotificationPermission();
+      } catch (e) {
+        if (e is PlatformException &&
+            e.code == 'PermissionRequestCancelledException') {
+          print('Permission request was cancelled.');
+        }
+      }
+    }
+
+    if (Platform.isAndroid) {
+      if (!await FlutterForegroundTask.isIgnoringBatteryOptimizations) {
+        await FlutterForegroundTask.requestIgnoreBatteryOptimization();
+      }
+    }
+  }
+
+  void _initForegroundService() {
+    FlutterForegroundTask.init(
+      androidNotificationOptions: AndroidNotificationOptions(
+        channelId: 'foreground_service',
+        channelName: 'Foreground Service Notification',
+        channelDescription:
+            'This notification appears when the foreground service is running.',
+        onlyAlertOnce: true,
+      ),
+      iosNotificationOptions: const IOSNotificationOptions(
+        showNotification: false,
+        playSound: false,
+      ),
+      foregroundTaskOptions: ForegroundTaskOptions(
+        eventAction: ForegroundTaskEventAction.repeat(5000),
+        autoRunOnBoot: true,
+        autoRunOnMyPackageReplaced: true,
+        allowWakeLock: true,
+        allowWifiLock: true,
+      ),
+    );
+  }
+
+  Future<ServiceRequestResult> _startForgroundService() async {
+    if (await FlutterForegroundTask.isRunningService) {
+      return FlutterForegroundTask.restartService();
+    } else {
+      return FlutterForegroundTask.startService(
+        serviceTypes: [
+          ForegroundServiceTypes.dataSync,
+          ForegroundServiceTypes.remoteMessaging,
+        ],
+        serviceId: 256,
+        notificationTitle: 'RojaS',
+        notificationText: 'Notification service',
+        notificationIcon: null,
+        notificationButtons: [
+          const NotificationButton(id: 'btn_open', text: 'Open'),
+        ],
+        notificationInitialRoute: '/',
+        callback: () {
+          // FlutterForegroundTask.setTaskHandler(MyTaskHandler());
+        },
+      );
+    }
+  }
+
+  Future<ServiceRequestResult> _stopForegroundService() {
+    return FlutterForegroundTask.stopService();
   }
 }

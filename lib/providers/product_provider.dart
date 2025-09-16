@@ -7,14 +7,28 @@ import '../utils/http_error.dart';
 enum ProductStatus { initial, loading, loaded, error }
 
 class ProductProvider with ChangeNotifier {
-  Future<Product?> addProduct(Map<String, dynamic> data) async {
+  Future<Product?> updateProduct(
+    String id,
+    Map<String, dynamic> data, {
+    void Function(double progress)? onProgress,
+  }) async {
     try {
-      final product = await _service.createProduct(data);
-      _products = [..._products, product];
+      final updated = await _service.updateProduct(
+        id,
+        data,
+        onProgress: onProgress,
+      );
+      // Update local list
+      _products = _products.map((p) => p.id == id ? updated : p).toList();
       notifyListeners();
-      return product;
+      return updated;
     } catch (e) {
-      _errorMessage = 'Failed to add product: $e';
+      String message = 'Failed to update product';
+      if (e is HttpError) {
+        _errorMessage = '$message: ${e.message}';
+      } else {
+        _errorMessage = '$message: $e';
+      }
       notifyListeners();
       return null;
     }
@@ -31,8 +45,34 @@ class ProductProvider with ChangeNotifier {
   ProductStatus get status => _status;
   String? get errorMessage => _errorMessage;
 
-  /// Fetches products from the server or local demo data.
-  /// Notifies listeners on state changes.
+  Future<Product?> addProduct(
+    Map<String, dynamic> data, {
+    void Function(double progress)? onProgress,
+  }) async {
+    try {
+      final product = await _service.createProduct(
+        data,
+        onProgress: onProgress,
+      );
+
+      _products = [..._products, product];
+
+      notifyListeners();
+
+      return product;
+    } catch (e) {
+      String message = 'Failed to add product';
+      // If error is an HttpError, show code and message
+      if (e is HttpError) {
+        _errorMessage = '$message: ${e.message}';
+      } else {
+        _errorMessage = '$message: $e';
+      }
+      notifyListeners();
+      return null;
+    }
+  }
+
   Future<void> fetchProducts({bool demo = false}) async {
     _status = ProductStatus.loading;
     _errorMessage = null;
@@ -57,7 +97,6 @@ class ProductProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  /// Sends a sell request for a product by id and returns the sold count.
   Future<int?> sellProduct(String productId) async {
     try {
       final response = await _service.sellProduct(productId);
