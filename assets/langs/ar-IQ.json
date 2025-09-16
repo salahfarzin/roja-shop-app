@@ -24,8 +24,11 @@
   "old price": "نرخی کۆن",
   "discount": "داشکاندن",
   "inventory": "چەن دانه",
+  "current inventory": "ئایسە چەنێکی ماۆه",
+  "update": "نوێکردنەوە",
   "save": "پاشەکەوتکردن",
-  "saving...": "پاشەکەوتکردن...",
+  "saving": "پاشەکەوتکردن...",
+  "loading": "پەلەمەکە..",
   "add image": "زیادکردنی وێنە",
   "required": "پێویستە",
   "settings": "ڕێکخستنەکان",
@@ -39,5 +42,9 @@
   "invalid number": "ژمارەی نادروست",
   "product created": "بەرهەم دروستکرا",
   "must be a number": "پێویستە ژمارە بێت",
-  "must be positive": "پێویستە بەرز بێت"
+  "must be positive": "پێویستە بەرز بێت",
+  "clear image cache": "سڕینەوەی کەشەی وێنە",
+  "clear": "سڕینەوە",
+  "image cache cleared": "کەشەی وێنە سڕایەوە",
+  "failed to sell product": "فەشل لە فرۆشتنی بەرهەم، تکایە دووبارە هەوڵبدە."
 }

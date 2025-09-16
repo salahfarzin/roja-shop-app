@@ -7,33 +7,6 @@ import '../utils/http_error.dart';
 enum ProductStatus { initial, loading, loaded, error }
 
 class ProductProvider with ChangeNotifier {
-  Future<Product?> updateProduct(
-    String id,
-    Map<String, dynamic> data, {
-    void Function(double progress)? onProgress,
-  }) async {
-    try {
-      final updated = await _service.updateProduct(
-        id,
-        data,
-        onProgress: onProgress,
-      );
-      // Update local list
-      _products = _products.map((p) => p.id == id ? updated : p).toList();
-      notifyListeners();
-      return updated;
-    } catch (e) {
-      String message = 'Failed to update product';
-      if (e is HttpError) {
-        _errorMessage = '$message: ${e.message}';
-      } else {
-        _errorMessage = '$message: $e';
-      }
-      notifyListeners();
-      return null;
-    }
-  }
-
   final ProductService _service = ProductService();
 
   List<Product> _products = const [];
@@ -73,41 +46,83 @@ class ProductProvider with ChangeNotifier {
     }
   }
 
-  Future<void> fetchProducts({bool demo = false}) async {
-    _status = ProductStatus.loading;
-    _errorMessage = null;
-    notifyListeners();
+  Future<Product?> updateProduct(
+    String id,
+    Map<String, dynamic> data, {
+    void Function(double progress)? onProgress,
+  }) async {
     try {
-      if (demo) {
-        await Future.delayed(const Duration(milliseconds: 500));
-        _products = productsData;
-      } else {
-        final fetched = await _service.fetchProducts();
-        _products = fetched;
-      }
-      _status = ProductStatus.loaded;
+      final updated = await _service.updateProduct(
+        id,
+        data,
+        onProgress: onProgress,
+      );
+      // Update local list
+      _products = _products.map((p) => p.id == id ? updated : p).toList();
+      notifyListeners();
+      return updated;
     } catch (e) {
-      _status = ProductStatus.error;
+      String message = 'Failed to update product';
       if (e is HttpError) {
-        _errorMessage = 'Failed to load products: ${e.message}';
+        _errorMessage = '$message: ${e.message}';
       } else {
-        _errorMessage = 'Failed to load products: $e';
+        _errorMessage = '$message: $e';
       }
+      notifyListeners();
+      return null;
     }
-    notifyListeners();
   }
 
-  Future<int?> sellProduct(String productId) async {
+  /// Fetches products with pagination (offset, limit)
+  Future<void> fetchMoreProducts({
+    int page = 0,
+    int limit = 6,
+    bool demo = false,
+  }) async {
+    _status = ProductStatus.loading;
+    _errorMessage = null;
+
     try {
-      final response = await _service.sellProduct(productId);
-      notifyListeners();
-      if (response is Map<String, dynamic> && response.containsKey('count')) {
-        return response['count'] as int?;
+      List<Product> newProducts;
+      if (demo) {
+        // Demo mode: slice from local data
+        newProducts = productsData.skip(page * limit).take(limit).toList();
+      } else {
+        // Real API: implement paginated fetch in ProductService
+        newProducts = await _service.fetchProducts(page: page, limit: limit);
       }
-      return null;
+      if (page == 0) {
+        _products = newProducts;
+      } else {
+        _products = [..._products, ...newProducts];
+      }
+      _status = ProductStatus.loaded;
+      notifyListeners();
+    } catch (e) {
+      String message = 'Failed to fetch products';
+      if (e is HttpError) {
+        _errorMessage = '$message: ${e.message}';
+      } else {
+        _errorMessage = '$message: $e';
+      }
+      _status = ProductStatus.error;
+      notifyListeners();
+    }
+  }
+
+  Future<Product?> sellProduct(String productId) async {
+    try {
+      final product = await _service.sellProduct(productId);
+      // Update local list with new product data
+      _products = _products
+          .map((p) => p.id == productId ? product : p)
+          .toList()
+          .cast<Product>();
+      notifyListeners();
+      return product;
     } catch (e) {
       notifyListeners();
-      return null;
+      rethrow;
     }
   }
 }

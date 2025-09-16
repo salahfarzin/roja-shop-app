@@ -22,8 +22,11 @@
   "brand": "برند",
   "price": "قیمت",
   "inventory": "موجودی",
+  "current inventory": "موجودی فعلی",
+  "update": "به‌روزرسانی",
   "save": "ذخیره",
-  "saving...": "در حال ذخیره...",
+  "loading": "در حال بارگذاری...",
+  "saving": "در حال ذخیره...",
   "add image": "اضافه کردن تصویر",
   "required": "الزامی",
   "settings": "تنظیمات",
@@ -37,5 +40,9 @@
   "invalid number": "عدد نامعتبر",
   "product created": "محصول ایجاد شد",
   "must be a number": "باید یک عدد باشد",
-  "must be positive": "باید مثبت باشد"
+  "must be positive": "باید مثبت باشد",
+  "clear image cache": "پاک کردن کش تصاویر",
+  "clear": "پاک کردن",
+  "image cache cleared": "کش تصاویر پاک شد",
+  "failed to sell product": "فروش محصول ناموفق بود، لطفا دوباره تلاش کنید."
 }

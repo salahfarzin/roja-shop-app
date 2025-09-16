@@ -9,9 +9,10 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:rojashop/models/product.dart';
 import 'package:rojashop/screens/products/add_product.dart';
-import 'package:rojashop/screens/products/management.dart';
+import 'package:rojashop/screens/products/details.dart';
 import 'providers/product_provider.dart';
 import 'screens/products/list.dart';
+import 'screens/splash_screen.dart';
 import 'providers/theme_provider.dart';
 import 'providers/locale_provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -130,11 +131,24 @@ class _RojaShopAppState extends State<RojaShopApp> {
         ),
       ),
       themeMode: themeProvider.themeMode,
-      initialRoute: '/',
+      initialRoute: '/splash',
       routes: {
+        '/splash': (context) => const SplashScreen(),
         '/': (context) => const ProductListScreen(),
-        '/manage-products': (context) => const ProductManagementScreen(),
         '/add-product': (context) => const AddProductScreen(),
+        '/product-details': (context) {
+          final args = ModalRoute.of(context)?.settings.arguments;
+          if (args is Product) {
+            return ProductDetailScreen(product: args);
+          }
+          // If no product, pop and show nothing
+          return Builder(
+            builder: (context) {
+              Future.microtask(() => Navigator.of(context).pop());
+              return const SizedBox.shrink();
+            },
+          );
+        },
         '/edit-product': (context) {
           final args = ModalRoute.of(context)?.settings.arguments;
           // args can be product or product id, adapt as needed

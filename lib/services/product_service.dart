@@ -75,41 +75,39 @@ class ProductService {
         imagePath.isNotEmpty &&
         !imagePath.startsWith('http');
 
-    if (isLocalImage) {
-      // Use multipart for image upload
-      final response = await _client.multipartRequest(
-        '/products/$id',
-        fields: filtered,
-        fileField: 'image',
-        filePath: imagePath,
-        onProgress: onProgress,
-      );
-      return Product.fromJson(response['product'] as Map<String, dynamic>);
-    } else {
-      // Use regular PUT for non-image update
-      final response = await _client.request(
-        '/products/$id',
-        method: 'PUT',
-        body: filtered,
-      );
-      return Product.fromJson(response['product'] as Map<String, dynamic>);
-    }
-  }
-
-  Future<dynamic> sellProduct(String uuid) async {
-    return await _client.request(
-      '/products/sell',
-      method: 'POST',
-      body: {'uuid': uuid},
+    // Always use multipart for update, with or without image
+    final response = await _client.multipartRequest(
+      '/products/$id',
+      method: 'PUT',
+      fields: filtered,
+      fileField: isLocalImage ? 'image' : null,
+      filePath: isLocalImage ? imagePath : null,
+      onProgress: onProgress,
+      headers: {'Content-Type': 'application/json'},
     );
+    return Product.fromJson(response['product'] as Map<String, dynamic>);
   }
 
-  Future<List<Product>> fetchProducts() async {
-    final response = await _client.request('/products');
+  Future<dynamic> sellProduct(String id) async {
+    final response = await _client.request(
+      '/products/sell/$id',
+      method: 'POST',
+      body: {'uuid': id, 'quantity': 1},
+      headers: {'Content-Type': 'application/json'},
+    );
+
+    return Product.fromJson(response['product'] as Map<String, dynamic>);
+  }
+
+  Future<List<Product>> fetchProducts({int page = 0, int limit = 6}) async {
+    // Pass page/limit as query params if backend supports
+    final response = await _client.request(
+      '/products?page=$page&limit=$limit',
+      headers: {'Content-Type': 'application/json'},
+    );
     if (response == null || response is! List) {
       return <Product>[];
     }
-
     final products = response
         .map((item) => Product.fromJson(item as Map<String, dynamic>))
         .toList()

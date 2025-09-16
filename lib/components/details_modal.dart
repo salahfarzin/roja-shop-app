@@ -1,5 +1,74 @@
-import 'package:easy_localization/easy_localization.dart' as trans;
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart' as trans;
+
+// Reusable key-value section widget
+class _KeyValueSection extends StatelessWidget {
+  final String title;
+  final Map<String, dynamic> data;
+  final Color titleColor;
+  final Color subtitleColor;
+  final double topSpacing;
+  final double titleSpacing;
+  const _KeyValueSection({
+    required this.title,
+    required this.data,
+    required this.titleColor,
+    required this.subtitleColor,
+    this.topSpacing = 16,
+    this.titleSpacing = 8,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(height: topSpacing),
+        Text(
+          title.tr(),
+          style: TextStyle(
+            color: titleColor,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+        SizedBox(height: titleSpacing),
+        ...data.entries.map(
+          (e) => Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Align(
+                    alignment: Directionality.of(context) == TextDirection.rtl
+                        ? Alignment.topRight
+                        : Alignment.topLeft,
+                    child: Text(
+                      '${e.key}:',
+                      style: TextStyle(
+                        color: subtitleColor,
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    e.value?.toString() ?? '',
+                    style: TextStyle(color: subtitleColor, fontSize: 15),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
 
 class DetailsModal extends StatelessWidget {
   final String story;
@@ -59,91 +128,23 @@ class DetailsModal extends StatelessWidget {
             const SizedBox(height: 18),
 
             if (details != null)
-              ...details!.entries.map(
-                (e) => Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Row(
-                    children: [
-                      Text(
-                        'details'.tr(),
-                        style: TextStyle(
-                          color: titleColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Expanded(
-                        child: Align(
-                          alignment:
-                              Directionality.of(context) == TextDirection.rtl
-                              ? Alignment.topRight
-                              : Alignment.topLeft,
-                          child: Text(
-                            '${e.key}:',
-                            style: TextStyle(
-                              color: subtitleColor,
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        flex: 2,
-                        child: Text(
-                          e.value?.toString() ?? '',
-                          style: TextStyle(color: subtitleColor, fontSize: 15),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              _KeyValueSection(
+                title: 'details',
+                data: details!,
+                titleColor: titleColor,
+                subtitleColor: subtitleColor,
+                topSpacing: 16,
+                titleSpacing: 8,
               ),
             const SizedBox(height: 8),
             if (styleNotes != null)
-              ...styleNotes!.entries.map(
-                (e) => Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Row(
-                    children: [
-                      const SizedBox(height: 18),
-                      Text(
-                        'style notes'.tr(),
-                        style: TextStyle(
-                          color: titleColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      Expanded(
-                        child: Align(
-                          alignment:
-                              Directionality.of(context) == TextDirection.rtl
-                              ? Alignment.topRight
-                              : Alignment.topLeft,
-                          child: Text(
-                            '${e.key}:',
-                            style: TextStyle(
-                              color: subtitleColor,
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        flex: 2,
-                        child: Text(
-                          e.value?.toString() ?? '',
-                          style: TextStyle(color: subtitleColor, fontSize: 15),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              _KeyValueSection(
+                title: 'style notes',
+                data: styleNotes!,
+                titleColor: titleColor,
+                subtitleColor: subtitleColor,
+                topSpacing: 18,
+                titleSpacing: 18,
               ),
           ],
         ),

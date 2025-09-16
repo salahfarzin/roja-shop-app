@@ -1,5 +1,7 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/theme_provider.dart';
@@ -7,13 +9,27 @@ import 'package:android_intent_plus/android_intent.dart';
 
 class SettingsScreen extends StatefulWidget {
   final VoidCallback? onThemeToggle;
-  const SettingsScreen({super.key, this.onThemeToggle});
+  final ValueNotifier<int>? imageCacheVersion;
+  const SettingsScreen({Key? key, this.onThemeToggle, this.imageCacheVersion})
+    : super(key: key);
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  Future<void> _clearImageCache() async {
+    // Clear all cached images
+    await CachedNetworkImage.evictFromCache(''); // Evicts all images
+    await DefaultCacheManager().emptyCache();
+    widget.imageCacheVersion?.value++;
+    if (mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('image cache cleared'.tr())));
+    }
+  }
+
   bool? isDark;
 
   @override
@@ -39,16 +55,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: ListView(
           children: [
             ListTile(
-              leading: Icon(Icons.edit, color: iconColor),
-              title: Text(
-                'manage products'.tr(),
-                style: TextStyle(color: textColor, fontWeight: FontWeight.w500),
-              ),
-              onTap: () {
-                Navigator.pushNamed(context, '/manage-products');
-              },
-            ),
-            ListTile(
               leading: Icon(Icons.language, color: iconColor),
               title: Text(
                 'change language'.tr(),
@@ -59,7 +65,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 final result = await showDialog<Locale>(
                   context: context,
                   builder: (context) => SimpleDialog(
-                    backgroundColor: theme.dialogBackgroundColor,
+                    backgroundColor: theme.dialogTheme.backgroundColor,
                     title: Text(
                       'change language'.tr(),
                       style: TextStyle(color: textColor),
@@ -75,19 +81,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       SimpleDialogOption(
                         child: Text(
-                          'فارسی',
-                          style: TextStyle(color: textColor),
-                        ),
-                        onPressed: () =>
-                            Navigator.pop(context, const Locale('fa', 'IR')),
-                      ),
-                      SimpleDialogOption(
-                        child: Text(
                           'کوردی',
                           style: TextStyle(color: textColor),
                         ),
                         onPressed: () =>
                             Navigator.pop(context, const Locale('ar', 'IQ')),
+                      ),
+                      SimpleDialogOption(
+                        child: Text(
+                          'فارسی',
+                          style: TextStyle(color: textColor),
+                        ),
+                        onPressed: () =>
+                            Navigator.pop(context, const Locale('fa', 'IR')),
                       ),
                     ],
                   ),
@@ -127,6 +133,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 icon: const Icon(Icons.settings),
                 label: const Text('Open'),
                 onPressed: _openNotificationAccessSettings,
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete),
+              title: Text(
+                'clear image cache'.tr(),
+                style: TextStyle(color: textColor, fontWeight: FontWeight.w500),
+              ),
+              trailing: ElevatedButton(
+                onPressed: _clearImageCache,
+                child: Text('clear'.tr()),
               ),
             ),
           ],

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -34,7 +35,7 @@ class ProductFormFields extends StatelessWidget {
         TextFormField(
           controller: titleController,
           decoration: InputDecoration(
-            labelText: 'product name',
+            labelText: 'product name'.tr(),
             labelStyle: TextStyle(color: labelColor),
           ),
           style: TextStyle(color: textColor),
@@ -43,7 +44,7 @@ class ProductFormFields extends StatelessWidget {
         TextFormField(
           controller: brandController,
           decoration: InputDecoration(
-            labelText: 'brand',
+            labelText: 'brand'.tr(),
             labelStyle: TextStyle(color: labelColor),
           ),
           style: TextStyle(color: textColor),
@@ -52,7 +53,7 @@ class ProductFormFields extends StatelessWidget {
         TextFormField(
           controller: descriptionController,
           decoration: InputDecoration(
-            labelText: 'description',
+            labelText: 'description'.tr(),
             labelStyle: TextStyle(color: labelColor),
           ),
           style: TextStyle(color: textColor),
@@ -62,7 +63,7 @@ class ProductFormFields extends StatelessWidget {
         TextFormField(
           controller: oldPriceController,
           decoration: InputDecoration(
-            labelText: 'old price',
+            labelText: 'old price'.tr(),
             labelStyle: TextStyle(color: labelColor),
           ),
           style: TextStyle(color: textColor),
@@ -73,15 +74,15 @@ class ProductFormFields extends StatelessWidget {
           validator: (v) {
             if (v == null || v.isEmpty) return null;
             final d = double.tryParse(v);
-            if (d == null) return 'must be a number';
-            if (d < 0) return 'must be positive';
+            if (d == null) return 'must be a number'.tr();
+            if (d < 0) return 'must be positive'.tr();
             return null;
           },
         ),
         TextFormField(
           controller: discountController,
           decoration: InputDecoration(
-            labelText: 'discount (%)',
+            labelText: 'discount (%)'.tr(),
             labelStyle: TextStyle(color: labelColor),
           ),
           style: TextStyle(color: textColor),
@@ -90,7 +91,7 @@ class ProductFormFields extends StatelessWidget {
         TextFormField(
           controller: priceController,
           decoration: InputDecoration(
-            labelText: 'price',
+            labelText: 'price'.tr(),
             labelStyle: TextStyle(color: labelColor),
           ),
           style: TextStyle(color: textColor),
@@ -101,15 +102,15 @@ class ProductFormFields extends StatelessWidget {
           validator: (v) {
             if (v == null || v.isEmpty) return requiredError;
             final d = double.tryParse(v);
-            if (d == null) return 'must be a number';
-            if (d < 0) return 'must be positive';
+            if (d == null) return 'must be a number'.tr();
+            if (d < 0) return 'must be positive'.tr();
             return null;
           },
         ),
         TextFormField(
           controller: inventoryController,
           decoration: InputDecoration(
-            labelText: 'inventory',
+            labelText: 'inventory'.tr(),
             labelStyle: TextStyle(color: labelColor),
           ),
           style: TextStyle(color: textColor),
@@ -118,8 +119,8 @@ class ProductFormFields extends StatelessWidget {
           validator: (v) {
             if (v == null || v.isEmpty) return requiredError;
             final n = int.tryParse(v);
-            if (n == null) return 'must be an integer';
-            if (n < 0) return 'must be positive';
+            if (n == null) return 'must be an integer'.tr();
+            if (n < 0) return 'must be positive'.tr();
             return null;
           },
         ),

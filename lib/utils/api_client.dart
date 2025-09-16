@@ -82,13 +82,14 @@ class ApiClient {
   Future<dynamic> multipartRequest(
     String path, {
     required Map<String, String> fields,
+    String method = 'POST',
     String? fileField,
     String? filePath,
     Map<String, String>? headers,
     void Function(double progress)? onProgress,
   }) async {
     final uri = Uri.parse('$baseUrl$path');
-    final request = http.MultipartRequest('POST', uri);
+    final request = http.MultipartRequest(method, uri);
     request.fields.addAll(fields);
     if (fileField != null && filePath != null && filePath.isNotEmpty) {
       // Detect MIME type

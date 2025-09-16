@@ -24,8 +24,11 @@
   "old price": "Old Price",
   "discount": "Discount",
   "inventory": "Inventory",
+  "current inventory": "Current Inventory",
+  "update": "Update",
   "save": "Save",
-  "saving...": "Saving...",
+  "saving": "Saving...",
+  "loading": "Loading...",
   "add image": "Add Image",
   "required": "Required",
   "settings": "Settings",
@@ -39,5 +42,9 @@
   "invalid number": "Invalid number",
   "product created": "Product created",
   "must be a number": "Must be a number",
-  "must be positive": "Must be positive"
+  "must be positive": "Must be positive",
+  "clear image cache": "Clear image cache",
+  "clear": "Clear",
+  "image cache cleared": "Image cache cleared",
+  "failed to sell product": "Failed to sell product, please try again."
 }

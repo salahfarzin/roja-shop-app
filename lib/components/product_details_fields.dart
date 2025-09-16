@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 class ProductDetailsFields extends StatelessWidget {
@@ -23,7 +24,7 @@ class ProductDetailsFields extends StatelessWidget {
         TextFormField(
           controller: skuController,
           decoration: InputDecoration(
-            labelText: 'SKU',
+            labelText: 'sku'.tr(),
             labelStyle: TextStyle(color: labelColor),
           ),
           style: TextStyle(color: textColor),
@@ -31,7 +32,7 @@ class ProductDetailsFields extends StatelessWidget {
         TextFormField(
           controller: barcodeController,
           decoration: InputDecoration(
-            labelText: 'Barcode',
+            labelText: 'barcode'.tr(),
             labelStyle: TextStyle(color: labelColor),
           ),
           style: TextStyle(color: textColor),
@@ -39,7 +40,7 @@ class ProductDetailsFields extends StatelessWidget {
         TextFormField(
           controller: weightController,
           decoration: InputDecoration(
-            labelText: 'Weight (kg)',
+            labelText: 'weight (kg)'.tr(),
             labelStyle: TextStyle(color: labelColor),
           ),
           style: TextStyle(color: textColor),
