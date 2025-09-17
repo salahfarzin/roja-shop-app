@@ -1,8 +1,11 @@
 // lib/services/http_client.dart
 import 'dart:convert';
+import 'dart:async';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:rojashop/utils/http_error.dart';
+import 'package:mime/mime.dart';
+import 'package:http_parser/http_parser.dart';
 
 class ApiClient {
   final String baseUrl =
@@ -53,10 +56,17 @@ class ApiClient {
         }
         return null;
       } else {
-        throw HttpError(
-          'HTTP ${response.statusCode}: ${response.body}',
-          response.statusCode,
-        );
+        String errorMsg = response.body;
+        // Try to extract 'message' from JSON error response
+        try {
+          final decoded = jsonDecode(response.body);
+          if (decoded is Map && decoded.containsKey('message')) {
+            errorMsg = decoded['message'].toString();
+          }
+        } catch (_) {
+          // Not JSON, keep raw body
+        }
+        throw HttpError(errorMsg, response.statusCode);
       }
     } catch (e) {
       final message = (e is HttpError)
@@ -68,19 +78,53 @@ class ApiClient {
     }
   }
 
-  /// Sends a multipart/form-data POST request with fields and a file.
+  /// Sends a multipart/form-data POST request with fields and a file, with progress callback.
   Future<dynamic> multipartRequest(
     String path, {
     required Map<String, String> fields,
+    String method = 'POST',
     String? fileField,
     String? filePath,
     Map<String, String>? headers,
+    void Function(double progress)? onProgress,
   }) async {
     final uri = Uri.parse('$baseUrl$path');
-    final request = http.MultipartRequest('POST', uri);
+    final request = http.MultipartRequest(method, uri);
     request.fields.addAll(fields);
     if (fileField != null && filePath != null && filePath.isNotEmpty) {
-      request.files.add(await http.MultipartFile.fromPath(fileField, filePath));
+      // Detect MIME type
+      final mimeType = lookupMimeType(filePath) ?? 'application/octet-stream';
+      final parts = mimeType.split('/');
+      final file = await http.MultipartFile.fromPath(
+        fileField,
+        filePath,
+        contentType: MediaType(parts[0], parts[1]),
+      );
+      if (onProgress != null) {
+        // Wrap file stream to report progress
+        final total = file.length;
+        int sent = 0;
+        final stream = file.finalize().transform(
+          StreamTransformer<List<int>, List<int>>.fromHandlers(
+            handleData: (data, sink) {
+              sent += data.length;
+              onProgress(sent / total);
+              sink.add(data);
+            },
+          ),
+        );
+        request.files.add(
+          http.MultipartFile(
+            file.field,
+            stream,
+            total,
+            filename: file.filename,
+            contentType: file.contentType,
+          ),
+        );
+      } else {
+        request.files.add(file);
+      }
     }
     if (headers != null) {
       request.headers.addAll(headers);
@@ -96,10 +140,17 @@ class ApiClient {
         }
         return null;
       } else {
-        throw HttpError(
-          'HTTP ${response.statusCode}: ${response.body}',
-          response.statusCode,
-        );
+        String errorMsg = response.body;
+        // Try to extract 'message' from JSON error response
+        try {
+          final decoded = jsonDecode(response.body);
+          if (decoded is Map && decoded.containsKey('message')) {
+            errorMsg = decoded['message'].toString();
+          }
+        } catch (_) {
+          // Not JSON, keep raw body
+        }
+        throw HttpError(errorMsg, response.statusCode);
       }
     } catch (e) {
       final message = (e is HttpError)

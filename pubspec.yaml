@@ -44,6 +44,14 @@ dependencies:
   shimmer: ^3.0.0
   shared_preferences: ^2.5.3
   image_picker: ^1.2.0
+  flutter_local_notifications: ^19.4.2
+  flutter_foreground_task: ^9.1.0
+  permission_handler: ^12.0.1
+  android_intent_plus: ^5.3.1
+  http_parser: ^4.1.2
+  mime: ^2.0.0
+  cached_network_image: ^3.4.1
+  flutter_cache_manager: ^3.4.1
 
 dev_dependencies:
   flutter_test:

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
-class AsyncSkeletonImage extends StatefulWidget {
+class AsyncSkeletonImage extends StatelessWidget {
   final String url;
   final double height;
   final double width;
@@ -15,55 +16,33 @@ class AsyncSkeletonImage extends StatefulWidget {
   });
 
   @override
-  State<AsyncSkeletonImage> createState() => _AsyncSkeletonImageState();
-}
-
-class _AsyncSkeletonImageState extends State<AsyncSkeletonImage> {
-  bool _loaded = false;
-  bool _error = false;
-
-  @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        if (!_loaded && !_error)
-          Shimmer.fromColors(
-            baseColor: Colors.grey[800]!,
-            highlightColor: Colors.grey[600]!,
-            child: Container(
-              height: widget.height,
-              width: widget.width,
-              color: Colors.grey[850],
-            ),
-          ),
-        Image.network(
-          widget.url,
-          height: widget.height,
-          width: widget.width,
-          fit: widget.fit,
-          frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-            if (wasSynchronouslyLoaded || frame != null) {
-              if (!_loaded) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted) setState(() => _loaded = true);
-                });
-              }
-              return child;
-            }
-            return const SizedBox.shrink();
-          },
-          errorBuilder: (context, error, stackTrace) {
-            if (!_error) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) setState(() => _error = true);
-              });
-            }
-            return const Center(
-              child: Icon(Icons.broken_image, size: 48, color: Colors.grey),
-            );
-          },
+    if (url.isEmpty || url.trim().isEmpty) {
+      return Container(
+        height: height,
+        width: width,
+        color: Colors.grey[850],
+        child: const Center(
+          child: Icon(Icons.image_not_supported, size: 48, color: Colors.grey),
         ),
-      ],
+      );
+    }
+    return CachedNetworkImage(
+      imageUrl: url,
+      height: height,
+      width: width,
+      fit: fit,
+      placeholder: (context, url) => Shimmer.fromColors(
+        baseColor: Colors.grey[800]!,
+        highlightColor: Colors.grey[600]!,
+        child: Container(height: height, width: width, color: Colors.grey[850]),
+      ),
+      errorWidget: (context, url, error) => const Center(
+        child: Icon(Icons.broken_image, size: 48, color: Colors.grey),
+      ),
+      fadeInDuration: const Duration(milliseconds: 200),
+      memCacheHeight: height.toInt(),
+      memCacheWidth: width == double.infinity ? null : width.toInt(),
     );
   }
 }

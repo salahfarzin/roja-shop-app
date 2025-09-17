@@ -8,6 +8,7 @@ class Product {
   final double? discount;
   final String? description;
   final int inventory;
+  final int soldCount;
   final Map<String, dynamic>? details;
   final Map<String, dynamic>? styleNotes;
 
@@ -21,6 +22,7 @@ class Product {
     this.discount,
     this.description,
     required this.inventory,
+    this.soldCount = 0,
     this.details,
     this.styleNotes,
   });
@@ -47,6 +49,9 @@ class Product {
       inventory: json['inventory'] is int
           ? json['inventory'] as int
           : int.tryParse(json['inventory'].toString()) ?? 0,
+      soldCount: json['sold_count'] is int
+          ? json['sold_count'] as int
+          : int.tryParse(json['sold_count'].toString()) ?? 0,
       details: json['details'] as Map<String, dynamic>?,
       styleNotes: json['style_notes'] as Map<String, dynamic>?,
     );

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class ImagePickerField extends StatefulWidget {
   final String? initialImagePath;
@@ -44,7 +45,16 @@ class _ImagePickerFieldState extends State<ImagePickerField> {
         color: Colors.grey[200],
         child: _imagePath == null
             ? const Icon(Icons.add_a_photo, size: 48)
-            : Image.file(File(_imagePath!), fit: BoxFit.cover),
+            : (_imagePath!.startsWith('http')
+                  ? CachedNetworkImage(
+                      imageUrl: _imagePath!,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) =>
+                          const Center(child: CircularProgressIndicator()),
+                      errorWidget: (context, url, error) =>
+                          const Icon(Icons.broken_image, size: 48),
+                    )
+                  : Image.file(File(_imagePath!), fit: BoxFit.cover)),
       ),
     );
   }

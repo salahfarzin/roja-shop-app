@@ -38,9 +38,9 @@ class ProductCard extends StatelessWidget {
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(12),
-                      child: AsyncSkeletonImage(url: product.image),
+                      child: AsyncSkeletonImage(url: product.image ?? ''),
                     ),
-                    if (product.discount != null)
+                    if (product.discount != null && product.discount! > 0)
                       Positioned(
                         top: 8,
                         left: isRtl ? 8 : null,
@@ -112,7 +112,7 @@ class ProductCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                const Spacer(),
+                const SizedBox(height: 8),
                 Directionality(
                   textDirection: TextDirection.ltr,
                   child: Row(
