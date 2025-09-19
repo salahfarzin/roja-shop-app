@@ -89,11 +89,12 @@ class _RojaShopAppState extends State<RojaShopApp> {
 
     FlutterForegroundTask.addTaskDataCallback(_onReceiveTaskData);
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       _requestNotificationPermissions(context);
-      _requestForgroundPermissions(context);
       _initForegroundService();
-      _startForgroundService();
+      await _requestForgroundPermissions(context);
+      _initForegroundService();
+      await _startForgroundService();
     });
   }
 
